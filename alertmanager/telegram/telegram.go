@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
+	// "encoding/json"
 	"github.com/abahmed/kwatch/config"
 	"github.com/abahmed/kwatch/event"
 	"github.com/sirupsen/logrus"
@@ -59,7 +59,7 @@ func (t *Telegram) Name() string {
 
 // SendEvent sends event to the provider
 func (t *Telegram) SendEvent(e *event.Event) error {
-	logrus.Debugf("sending to telegram event: %v", e)
+	logrus.Infof("sending to telegram event: %v", e)
 
 	reqBody := t.buildRequestBodyTelegram(e, t.chatId, "")
 	return t.sendByTelegramApi(reqBody)
@@ -67,7 +67,8 @@ func (t *Telegram) SendEvent(e *event.Event) error {
 
 // SendMessage sends text message to the provider
 func (t *Telegram) SendMessage(msg string) error {
-	logrus.Debugf("sending to telegram msg: %s", msg)
+	// logrus.Debugf("sending to telegram msg: %s", msg)
+	logrus.Infof("sending to telegram msg: %s", msg)
 
 	reqBody := t.buildRequestBodyTelegram(new(event.Event), t.chatId, msg)
 	return t.sendByTelegramApi(reqBody)
@@ -95,12 +96,17 @@ func (t *Telegram) buildRequestBodyTelegram(
 	// build text will be sent in the message
 	txt := ""
 	if len(customMsg) <= 0 {
+		logsText := strings.TrimSuffix(logsText, "\n")
+		eventsText := strings.Trim(eventsText, "\"")
 		txt = fmt.Sprintf(
-			"An alert for Cluster: *%s* Name: *%s*  "+
-				"Container: *%s* "+
-				"Namespace: *%s*  has been triggered:\\n—\\n "+
-				"Logs: *%s* \\n "+
-				"Events: *%s* ",
+			"%sAn alert for Pod: *%s*  \\n"+
+			"==========================================  \\n"+
+			"Container: *%s* \\n"+
+			"Namespace: *%s* \\n"+
+			"==========================================  \\n"+
+			"Logs: \\n ```%s``` \\n "+
+			"==========================================  \\n"+
+			"Events: \\n `%s`",
 			t.appCfg.ClusterName,
 			e.Name,
 			e.Container,
@@ -114,20 +120,24 @@ func (t *Telegram) buildRequestBodyTelegram(
 
 	// build the message to be sent
 	msg := fmt.Sprintf(
-		"⛑ Kwatch detected a crash in pod \\n%s ",
+		"⛑ Kwatch *detected* a crash in pod \\n%s ",
 		txt,
 	)
 
 	reqBody := fmt.Sprintf(
-		`{"chat_id": "%s", "text": "%s", "parse_mode": "MARKDOWN"}`,
+		`{"chat_id": "%s", "text": "%s", "parse_mode": "Markdown"}`,
 		chatId,
 		msg,
 	)
+
+	// reqBody := `{"chat_id": "`+ chatId +`", "text": "`+msg+`", "parse_mode": "Markdown"}`
+
+	logrus.Infof(reqBody)
 	return reqBody
 }
 
 func (t *Telegram) sendByTelegramApi(reqBody string) error {
-	client := &http.Client{}
+	client := http.Client{}
 	buffer := bytes.NewBuffer([]byte(reqBody))
 	url := fmt.Sprintf(t.url, t.token)
 

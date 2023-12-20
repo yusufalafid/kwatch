@@ -13,6 +13,7 @@ RUN go mod download
 
 COPY . /build/
 RUN sed -i 's/dev/'"${RELEASE_VERSION}"'/g' version/version.go
+RUN go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o kwatch .
 
 FROM alpine:latest
