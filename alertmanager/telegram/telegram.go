@@ -59,7 +59,7 @@ func (t *Telegram) Name() string {
 
 // SendEvent sends event to the provider
 func (t *Telegram) SendEvent(e *event.Event) error {
-	logrus.Infof("sending to telegram event: %v", e)
+	logrus.Debugf("sending to telegram event: %v", e)
 
 	reqBody := t.buildRequestBodyTelegram(e, t.chatId, "")
 	return t.sendByTelegramApi(reqBody)
@@ -68,7 +68,7 @@ func (t *Telegram) SendEvent(e *event.Event) error {
 // SendMessage sends text message to the provider
 func (t *Telegram) SendMessage(msg string) error {
 	// logrus.Debugf("sending to telegram msg: %s", msg)
-	logrus.Infof("sending to telegram msg: %s", msg)
+	logrus.Debugf("sending to telegram msg: %s", msg)
 
 	reqBody := t.buildRequestBodyTelegram(new(event.Event), t.chatId, msg)
 	return t.sendByTelegramApi(reqBody)
@@ -96,17 +96,19 @@ func (t *Telegram) buildRequestBodyTelegram(
 	// build text will be sent in the message
 	txt := ""
 	if len(customMsg) <= 0 {
+		// Trim all unnecessary character that break the format
 		logsText := strings.TrimSuffix(logsText, "\n")
-		eventsText := strings.Trim(eventsText, "\"")
+		eventsText := strings.ReplaceAll(eventsText, "\"", "")
 		txt = fmt.Sprintf(
-			"%sAn alert for Pod: *%s*  \\n"+
+			"An alert for Cluster: *%s* \n" +
+			"Pod: *%s*  \\n"+
 			"==========================================  \\n"+
 			"Container: *%s* \\n"+
 			"Namespace: *%s* \\n"+
 			"==========================================  \\n"+
-			"Logs: \\n ```%s``` \\n "+
+			"Logs: \\n```\n%s\n```\\n "+
 			"==========================================  \\n"+
-			"Events: \\n `%s`",
+			"Events: \\n`%s`",
 			t.appCfg.ClusterName,
 			e.Name,
 			e.Container,
@@ -129,10 +131,8 @@ func (t *Telegram) buildRequestBodyTelegram(
 		chatId,
 		msg,
 	)
-
-	// reqBody := `{"chat_id": "`+ chatId +`", "text": "`+msg+`", "parse_mode": "Markdown"}`
-
-	logrus.Infof(reqBody)
+	// Print reqBody to stdout for debug purpose :)
+	// logrus.Infof(reqBody)
 	return reqBody
 }
 
