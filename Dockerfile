@@ -1,6 +1,6 @@
 FROM golang:alpine AS builder
-ARG RELEASE_VERSION="nothing"
-LABEL maintainer="Abdelrahman Ahmed <a.ahmed1026@gmail.com>"
+ARG RELEASE_VERSION="v0.8.5"
+LABEL maintainer="BKK <bkk@gmail.com>"
 
 RUN apk update && \
     apk add git build-base && \

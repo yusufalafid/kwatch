@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	// "encoding/json"
 	"github.com/abahmed/kwatch/config"
 	"github.com/abahmed/kwatch/event"
 	"github.com/sirupsen/logrus"
@@ -125,15 +124,30 @@ func (t *Telegram) buildRequestBodyTelegram(
 		"⛑ Kwatch *detected* a crash in pod \\n%s ",
 		txt,
 	)
+	if strings.Contains(chatId,"_" ){
+		temp := strings.Split(chatId, "_")
+		id := temp[0]
+		channelid := temp[1]
 
-	reqBody := fmt.Sprintf(
-		`{"chat_id": "%s", "text": "%s", "parse_mode": "Markdown"}`,
-		chatId,
-		msg,
-	)
+		reqBody := fmt.Sprintf(
+			`{"chat_id": "%s", "text": "%s", "parse_mode": "Markdown", "reply_to_message_id":"%s"}`,
+			id,
+			msg,
+			channelid,
+		)
+	return reqBody
+
+	}else{
+		reqBody := fmt.Sprintf(
+			`{"chat_id": "%s", "text": "%s", "parse_mode": "Markdown"}`,
+			chatId,
+			msg,
+		)
+	return reqBody
+		
+	}
 	// Print reqBody to stdout for debug purpose :)
 	// logrus.Infof(reqBody)
-	return reqBody
 }
 
 func (t *Telegram) sendByTelegramApi(reqBody string) error {
